@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>iPhone Privacy Check</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: calm, clinical, trustworthy - a privacy inspection, not a scare page
+   IDEA: the iPhone status bar at night - the green (camera) and orange (mic) dots are the whole story
+   PICTURE: a large dark phone top with dynamic island and the two live dots, labelled
+   COLOUR and TYPE: ink black band, iOS green #30d158 / orange #ff9f0a / blue #0a84ff accents; Sora + Figtree
+   LAYOUT: dark hero band with phone top, then upload tool, then results, checklist, live-detection notes */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#0b0d0c);--ink:light-dark(#121413,#eef0ee);--mut:light-dark(#5b605d,#9aa19d);--line:light-dark(#e3e6e4,#232826);--card:light-dark(#f6f7f6,#131715);--band:#0e1110;--cam:#30d158;--camt:light-dark(#137a37,#30d158);--mic:#ff9f0a;--mict:light-dark(#a55d00,#ff9f0a);--loc:#0a84ff;--loct:light-dark(#0a5fc2,#5aa9ff);--red:light-dark(#c62828,#ff6b61);--redbg:light-dark(#fdecea,#2a1513);--ambbg:light-dark(#fff4e0,#2a1f0c)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Figtree,system-ui,-apple-system,sans-serif;overflow-x:clip}
+.band{padding:clamp(28px,4vw,64px) max(5vw,16px)}
+.wrap{max-width:1240px;margin:auto}
+h1,h2,h3{font-family:Sora,Figtree,sans-serif;line-height:1.08;text-wrap:balance;margin:0}
+h1{font-size:clamp(32px,5vw,50px)}h2{font-size:clamp(24px,3vw,32px);margin-bottom:14px}h3{font-size:18px;margin-bottom:6px}
+p{max-width:70ch}.mut{color:var(--mut)}.sm{font-size:14px}
+code{font:13px ui-monospace,Menlo,Consolas,monospace;overflow-wrap:anywhere}
+pre,.scroll{overflow-x:auto}html{scroll-padding-top:72px}
+a{color:var(--loct)}
+.hero{background:var(--band);color:#eef0ee}
+.hero .mut{color:#a7aeaa}
+.phone{display:block;width:100%;max-width:980px;margin:0 auto 28px;height:auto}
+.grid2{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:clamp(20px,4vw,48px);align-items:start}
+.steps{counter-reset:s;list-style:none;padding:0;margin:18px 0 0}
+.steps li{counter-increment:s;position:relative;padding:0 0 14px 44px}
+.steps li::before{content:counter(s);position:absolute;left:0;top:-2px;width:30px;height:30px;border-radius:50%;background:#1d2321;color:#eef0ee;display:grid;place-items:center;font-weight:700;font-size:14px;border:1px solid #2c3431}
+.steps b{color:#fff}
+.drop{border:2px dashed #3a4440;border-radius:20px;padding:28px 22px;text-align:center;background:#141917;transition:border-color .2s}
+.drop.on{border-color:var(--cam)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 22px;border-radius:999px;border:0;font:600 16px Figtree,sans-serif;cursor:pointer;background:var(--cam);color:#06140b}
+.btn.ghost{background:transparent;color:inherit;border:1px solid currentColor;opacity:.85}
+.btn:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--loc);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px}
+.lock{font-size:13px;color:#a7aeaa;margin-top:14px}
+#res{display:none}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0 28px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.stat b{display:block;font:700 clamp(26px,3vw,34px) Sora,sans-serif}
+.stat span{font-size:13px;color:var(--mut)}
+.c-cam b{color:var(--camt)}.c-mic b{color:var(--mict)}.c-loc b{color:var(--loct)}.c-red b{color:var(--red)}
+.find{list-style:none;padding:0;margin:0 0 28px;display:grid;gap:10px}
+.find li{border-radius:14px;padding:12px 16px;background:var(--card);border-left:5px solid var(--line)}
+.find li.hi{background:var(--redbg);border-color:var(--red)}.find li.md{background:var(--ambbg);border-color:var(--mic)}.find li.ok{border-color:var(--cam)}
+.tools{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0 12px}
+input[type=search],select{font:16px Figtree,sans-serif;min-height:46px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+input[type=search]{flex:1;min-width:200px}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{text-align:left;padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:13px;color:var(--mut);font-weight:600}
+td.n,th.n{text-align:right;white-space:nowrap}
+.nw{white-space:nowrap}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.d-camera{background:var(--cam)}.d-microphone{background:var(--mic)}.d-location{background:var(--loc)}.d-other{background:var(--mut)}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:1px 8px;border-radius:6px;margin-left:4px;white-space:nowrap}
+.t-red{background:var(--red);color:#fff}.t-amb{background:var(--mic);color:#1d1200}.t-grey{background:var(--line);color:var(--ink)}
+.sec{margin-top:40px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.chk{display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.chk input{width:24px;height:24px;flex:none;margin-top:2px;accent-color:#1f9d55}
+.chk .where{font-size:14px;color:var(--mut)}
+.chk input:checked~div b{text-decoration:line-through;opacity:.6}
+.live{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.note{font-size:14px;color:var(--mut);margin-top:10px}
+footer{padding:28px max(5vw,16px);color:var(--mut);font-size:14px;border-top:1px solid var(--line)}
+@media(max-width:800px){.grid2{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--line)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:8em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;white-space:normal;color:var(--mut)}.stack td:empty{display:none}}
+@media(prefers-reduced-motion:no-preference){.pulse{animation:p 2.4s ease-in-out infinite}.pulse2{animation:p 2.4s ease-in-out 1.2s infinite}@keyframes p{50%{opacity:.35}}}
+</style>
+<script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
+</head>
+<body>
+
+<section class="band hero">
+ <div class="wrap">
+  <svg class="phone" viewBox="0 0 980 230" role="img" aria-label="iPhone status bar showing the green camera dot and orange microphone dot">
+   <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#262d2a"/><stop offset="1" stop-color="#151917"/></linearGradient>
+    <radialGradient id="gc"><stop offset="0" stop-color="#30d158" stop-opacity=".55"/><stop offset="1" stop-color="#30d158" stop-opacity="0"/></radialGradient>
+    <radialGradient id="go"><stop offset="0" stop-color="#ff9f0a" stop-opacity=".55"/><stop offset="1" stop-color="#ff9f0a" stop-opacity="0"/></radialGradient>
+   </defs>
+   <rect x="40" y="40" width="900" height="240" rx="70" fill="url(#g1)" stroke="#39423e" stroke-width="3"/>
+   <rect x="54" y="54" width="872" height="230" rx="58" fill="#050706"/>
+   <rect x="380" y="74" width="220" height="56" rx="28" fill="#000" stroke="#1b201e"/>
+   <circle cx="566" cy="102" r="9" fill="#0d1a24"/>
+   <text x="120" y="112" fill="#eef0ee" font-family="Sora,sans-serif" font-size="34" font-weight="700">2:47</text>
+   <circle class="pulse" cx="690" cy="101" r="40" fill="url(#gc)"/><circle cx="690" cy="101" r="11" fill="#30d158"/>
+   <circle class="pulse2" cx="736" cy="101" r="40" fill="url(#go)"/><circle cx="736" cy="101" r="11" fill="#ff9f0a"/>
+   <g fill="#eef0ee"><rect x="790" y="104" width="6" height="10" rx="2"/><rect x="800" y="98" width="6" height="16" rx="2"/><rect x="810" y="92" width="6" height="22" rx="2"/><rect x="820" y="86" width="6" height="28" rx="2"/></g>
+   <rect x="842" y="88" width="46" height="24" rx="7" fill="none" stroke="#eef0ee" stroke-width="2.5"/><rect x="846" y="92" width="30" height="16" rx="4" fill="#eef0ee"/>
+   <line x1="690" y1="140" x2="610" y2="196" stroke="#30d158" stroke-width="2"/>
+   <text x="640" y="214" text-anchor="end" fill="#30d158" font-family="Figtree,sans-serif" font-size="24" font-weight="600">Green = camera</text>
+   <line x1="736" y1="140" x2="770" y2="196" stroke="#ff9f0a" stroke-width="2"/>
+   <text x="768" y="214" fill="#ff9f0a" font-family="Figtree,sans-serif" font-size="24" font-weight="600">Orange = mic</text>
+  </svg>
+
+  <div class="grid2">
+   <div>
+    <h1>Kaun sa app aapka camera aur mic chupke se use karta hai?</h1>
+    <p class="mut">Aapka iPhone har app ka camera, microphone, location, contacts aur photos use karna khud record karta hai, aur ye bhi ki app kin websites se baat karta hai. Ye page wo record padh ke aasaan report banata hai. <a href="#drop" style="color:#30d158">File pehle se hai? Seedha upload par jao.</a></p>
+    <ol class="steps">
+     <li><b>Settings → Privacy &amp; Security → App Privacy Report</b> kholo aur <b>Turn On App Privacy Report</b> dabao.</li>
+     <li>Phone normal use karo. Report pichhle <b>7 din</b> ka record rakhti hai. Pehli baar ON kiya hai to kam se kam 1 din ruko.</li>
+     <li>Usi screen par sabse neeche jao aur <b>Save App Activity</b> dabao (purane iOS me upar right ka share button). Phir <b>Save to Files</b>.</li>
+     <li>Yahin wapas aao, <b>Choose file</b> dabao aur wo file chuno (naam: <code>App_Privacy_Report_….ndjson</code>).</li>
+    </ol>
+   </div>
+   <div>
+    <div class="drop" id="drop">
+     <h3>Apni report file yahan dalo</h3>
+     <p class="mut sm" style="margin:6px auto 0">.ndjson file chuno, ya computer par yahan drag karo</p>
+     <div class="row">
+      <label class="btn" for="file">Choose file</label>
+      <input id="file" type="file" accept=".ndjson,.json,.txt,application/json,application/x-ndjson,text/plain" hidden>
+      <button class="btn ghost" id="demo" type="button">See sample report</button>
+     </div>
+     <p id="status" class="sm" style="min-height:1.5em;margin:14px auto 0"></p>
+     <p class="lock">File aapke phone/browser ke andar hi padhi jaati hai. Kuch bhi upload ya save nahi hota.</p>
+    </div>
+   </div>
+  </div>
+ </div>
+</section>
+
+<section class="band" id="res">
+ <div class="wrap">
+  <h2 id="rtitle">Your report</h2>
+  <p class="mut" id="rsub"></p>
+  <div class="stats" id="stats"></div>
+
+  <h3>Kya dhyan dene layak mila</h3>
+  <ul class="find" id="find"></ul>
+
+  <div class="sec">
+   <h2>Har app: camera, mic, location, contacts, photos</h2>
+   <div class="tools">
+    <input type="search" id="q" placeholder="App ka naam search karo">
+    <select id="cat"><option value="">All sensors</option></select>
+    <button class="btn ghost" id="copy" type="button" style="min-height:46px">Copy summary</button>
+   </div>
+   <div class="scroll"><table class="stack" id="apps"><thead><tr><th>App</th><th>What</th><th class="n">Times</th><th class="n">Total time</th><th class="n">At night</th><th>Last used</th></tr></thead><tbody></tbody></table></div>
+   <p class="note">"At night" = raat 12 se subah 6 baje ke beech (phone ke time ke hisaab se). Total time sirf tab dikhta hai jab iPhone ne start aur end dono record kiye hon.</p>
+  </div>
+
+  <div class="sec">
+   <h2>Camera aur mic: har baar ka record</h2>
+   <div class="scroll"><table class="stack" id="tl"><thead><tr><th>When</th><th>App</th><th>What</th><th class="n">Duration</th><th>Note</th></tr></thead><tbody></tbody></table></div>
+  </div>
+
+  <div class="sec">
+   <h2>Apps kin websites/servers se baat karte hain</h2>
+   <p class="mut">Bahut saare tracking ya anjaan domains wale apps par shak karna chahiye, khaas kar torch, cleaner, wallpaper jaise simple apps par.</p>
+   <div class="scroll"><table class="stack" id="net"><thead><tr><th>App</th><th class="n">Domains</th><th class="n">Hits</th><th>Top domains</th></tr></thead><tbody></tbody></table></div>
+  </div>
+ </div>
+</section>
+
+<section class="band" style="border-top:1px solid var(--line)">
+ <div class="wrap">
+  <h2>iPhone safety checklist</h2>
+  <p class="mut">iPhone par spying aksar kisi app se nahi, balki in settings se hoti hai. Har ek kholo aur tick karo. Aapke ticks sirf is browser me yaad rehte hain.</p>
+  <div id="checks"></div>
+ </div>
+</section>
+
+<section class="band" style="background:var(--card)">
+ <div class="wrap">
+  <h2>Real time me kaise pakdein</h2>
+  <p class="mut">iOS kisi bhi app ya website ko doosre apps par real time nazar rakhne nahi deta, isliye iPhone par aisa monitor app ban hi nahi sakta. Apple ka apna system hi real-time alarm hai, aur use koi app band nahi kar sakta:</p>
+  <div class="live">
+   <div class="card"><h3><span class="dot d-camera"></span>Green dot</h3><p class="sm">Screen ke upar right me green dot = <b>camera</b> abhi chal raha hai (mic bhi saath ho sakta hai).</p></div>
+   <div class="card"><h3><span class="dot d-microphone"></span>Orange dot</h3><p class="sm">Orange dot = sirf <b>microphone</b> chal raha hai. Bina call/voice note ke dikhe to dhyan do.</p></div>
+   <div class="card"><h3>Control Center</h3><p class="sm">Dot dikhte hi upar right se neeche swipe karo. Sabse upar <b>us app ka naam</b> likha aata hai jisne abhi camera/mic use kiya.</p></div>
+   <div class="card"><h3>Har din dekho</h3><p class="sm">App Privacy Report ON rakho. Shak ho to apna time likh lo aur baad me file yahan dal ke us time ka record dekho.</p></div>
+  </div>
+  <p class="note">Normal cases: Siri / "Hey Siri" mic sunta hai, par Apple usko dot me nahi dikhata. Keyboard ka dictation, Face ID aur WhatsApp/FaceTime calls bhi aate hain. Shak ki baat ye hai: koi app jise camera ki zaroorat hi nahi, raat me use, ya bina aapke khole lambe time tak mic chalna.</p>
+ </div>
+</section>
+
+<footer>Ye tool aapki file sirf aapke browser me padhta hai, kuch upload nahi karta. Ye antivirus nahi hai, sirf aapke iPhone ke apne record ko aasaan bhasha me dikhata hai. Gambhir shak ho to iOS update karo, Apple ID ka password badlo, aur Apple Support se sampark karo.</footer>
+
+<script>
+{
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const NAMES={"net.whatsapp.WhatsApp":"WhatsApp","net.whatsapp.WhatsAppSMB":"WhatsApp Business","com.burbn.instagram":"Instagram","com.facebook.Facebook":"Facebook","com.facebook.Messenger":"Messenger","com.toyopagroup.picaboo":"Snapchat","com.zhiliaoapp.musically":"TikTok","ph.telegra.Telegraph":"Telegram","com.google.ios.youtube":"YouTube","com.google.GoogleMobile":"Google","com.google.Gmail":"Gmail","com.google.chrome.ios":"Chrome","com.google.Maps":"Google Maps","us.zoom.videomeetings":"Zoom","com.microsoft.skype.teams":"Microsoft Teams","com.skype.skype":"Skype","com.spotify.client":"Spotify","com.ubercab.UberClient":"Uber","com.atebits.Tweetie2":"X (Twitter)","com.linkedin.LinkedIn":"LinkedIn","com.amazon.Amazon":"Amazon","com.netflix.Netflix":"Netflix","org.whispersystems.signal":"Signal","com.viber":"Viber","com.apple.camera":"Camera (Apple)","com.apple.mobilephone":"Phone (Apple)","com.apple.facetime":"FaceTime","com.apple.MobileSMS":"Messages (Apple)","com.apple.mobilesafari":"Safari","com.apple.Maps":"Apple Maps","com.apple.mobileslideshow":"Photos (Apple)","com.apple.VoiceMemos":"Voice Memos","com.apple.mobilenotes":"Notes (Apple)","com.apple.findmy":"Find My","com.apple.weather":"Weather (Apple)"};
+const EXPECT_AV=new Set(["net.whatsapp.WhatsApp","net.whatsapp.WhatsAppSMB","com.burbn.instagram","com.facebook.Facebook","com.facebook.Messenger","com.toyopagroup.picaboo","com.zhiliaoapp.musically","ph.telegra.Telegraph","com.google.GoogleMobile","com.google.chrome.ios","us.zoom.videomeetings","com.microsoft.skype.teams","com.skype.skype","org.whispersystems.signal","com.viber","com.google.ios.youtube","com.atebits.Tweetie2","com.linkedin.LinkedIn"]);
+const CAT={camera:"Camera",microphone:"Microphone",location:"Location",contacts:"Contacts",photos:"Photos",mediaLibrary:"Music library",calendars:"Calendar",reminders:"Reminders",screenRecording:"Screen recording"};
+const name=b=>NAMES[b]||(b.startsWith('com.apple.')?b.replace('com.apple.','')+' (Apple)':b);
+const isApple=b=>b.startsWith('com.apple.');
+const catLabel=c=>CAT[c]||c;
+const dotCls=c=>['camera','microphone','location'].includes(c)?'d-'+c:'d-other';
+
+// time helpers: keep the phone's own clock from the ISO string
+const hourOf=t=>{const m=/T(\d\d):/.exec(t||'');return m?+m[1]:null};
+const fmtT=t=>{const m=/(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)/.exec(t||'');if(!m)return t||'-';const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m[2]-1];return `${+m[3]} ${mo}, ${m[4]}:${m[5]}`};
+const fmtD=s=>{if(s==null)return '-';s=Math.round(s);if(s<60)return s+'s';if(s<3600)return Math.floor(s/60)+'m '+(s%60)+'s';return Math.floor(s/3600)+'h '+Math.floor(s%3600/60)+'m'};
+const night=t=>{const h=hourOf(t);return h!=null&&h<6};
+
+function parse(text){
+  let recs=[];text=text.trim();
+  if(text.startsWith('[')){try{recs=JSON.parse(text)}catch(e){}}
+  if(!recs.length){for(const line of text.split(/\r?\n/)){const l=line.trim();if(!l)continue;try{recs.push(JSON.parse(l))}catch(e){}}}
+  return recs;
+}
+
+function analyse(recs){
+  const open={},sessions=[],net={};let first=null,last=null;
+  const seen=t=>{if(!t)return;if(!first||t<first)first=t;if(!last||t>last)last=t};
+  for(const r of recs){
+    if(!r||typeof r!=='object')continue;
+    if(r.type==='networkActivity'||r.domain){
+      const b=r.bundleID||r.bundleId||'unknown';const n=net[b]||(net[b]={domains:{},hits:0});
+      const h=+r.hits||1;n.hits+=h;const d=String(r.domain||'?');n.domains[d]=(n.domains[d]||0)+h;
+      seen(r.timeStamp);seen(r.firstTimeStamp);continue;
+    }
+    const b=(r.accessor&&r.accessor.identifier)||r.bundleID||r.accessorIdentifier;
+    if(!b||!r.category)continue;
+    seen(r.timeStamp);
+    const id=r.identifier||(b+r.category+r.timeStamp);
+    if(r.kind==='intervalBegin'){open[id]={b,cat:r.category,start:r.timeStamp,end:null};}
+    else if(r.kind==='intervalEnd'){
+      const s=open[id];
+      if(s){s.end=r.timeStamp;sessions.push(s);delete open[id];}
+      else sessions.push({b,cat:r.category,start:r.timeStamp,end:null});
+    } else sessions.push({b,cat:r.category,start:r.timeStamp,end:null});
+  }
+  for(const k in open)sessions.push(open[k]);
+  for(const s of sessions){
+    const a=Date.parse(s.start),e=Date.parse(s.end);
+    s.dur=(s.end&&!isNaN(a)&&!isNaN(e)&&e>=a)?(e-a)/1000:null;
+    s.night=night(s.start);
+  }
+  sessions.sort((x,y)=>(y.start||'').localeCompare(x.start||''));
+  return {sessions,net,first,last};
+}
+
+let DATA=null;
+
+function render(d,label){
+  DATA=d;const S=d.sessions;
+  const by=c=>S.filter(s=>s.cat===c);
+  const cam=by('camera'),mic=by('microphone');
+  const apps=new Set(S.map(s=>s.b));Object.keys(d.net).forEach(b=>apps.add(b));
+  const nightAV=S.filter(s=>s.night&&(s.cat==='camera'||s.cat==='microphone'));
+  const domains=new Set();Object.values(d.net).forEach(n=>Object.keys(n.domains).forEach(x=>domains.add(x)));
+
+  $('#rtitle').textContent=label;
+  $('#rsub').textContent=d.first?`Record: ${fmtT(d.first)} se ${fmtT(d.last)} tak (phone ka time)`:'';
+  const st=[["Apps seen",apps.size,""],["Camera uses",cam.length,"c-cam"],["Mic uses",mic.length,"c-mic"],["Location uses",by('location').length,"c-loc"],["Contacts / photos",by('contacts').length+by('photos').length,""],["Cam/mic at night",nightAV.length,nightAV.length?"c-red":""],["Domains contacted",domains.size,""]];
+  $('#stats').innerHTML=st.map(([t,n,c])=>`<div class="stat ${c}"><b>${n}</b><span>${esc(t)}</span></div>`).join('');
+
+  // group per app+category
+  const g={};
+  for(const s of S){const k=s.b+'|'+s.cat;const x=g[k]||(g[k]={b:s.b,cat:s.cat,n:0,tot:0,hasDur:false,night:0,last:null,maxDur:0});x.n++;if(s.dur!=null){x.tot+=s.dur;x.hasDur=true;x.maxDur=Math.max(x.maxDur,s.dur)}if(s.night)x.night++;if(!x.last||s.start>x.last)x.last=s.start;}
+  const G=Object.values(g);DATA.G=G;
+
+  // findings
+  const F=[];
+  const avApps=G.filter(x=>x.cat==='camera'||x.cat==='microphone');
+  for(const x of avApps){
+    const odd=!isApple(x.b)&&!EXPECT_AV.has(x.b);
+    if(odd&&x.night)F.push(['hi',`<b>${esc(name(x.b))}</b> ne raat me ${x.night} baar <b>${esc(catLabel(x.cat).toLowerCase())}</b> use kiya. Ye aam app nahi hai jise iski zaroorat ho, pehle isko check karo.`]);
+    else if(odd)F.push(['md',`<b>${esc(name(x.b))}</b> ne ${x.n} baar <b>${esc(catLabel(x.cat).toLowerCase())}</b> use kiya. Kya ye app sach me iske liye aapne use kiya tha?`]);
+    else if(x.night>=2)F.push(['md',`<b>${esc(name(x.b))}</b> ne raat me ${x.night} baar ${esc(catLabel(x.cat).toLowerCase())} use kiya. Kya us time aap call ya video par the?`]);
+    if(x.cat==='microphone'&&x.maxDur>=900&&odd)F.push(['hi',`<b>${esc(name(x.b))}</b> ne ek baar me <b>${fmtD(x.maxDur)}</b> tak microphone chalaya.`]);
+  }
+  for(const x of G.filter(x=>x.cat==='contacts'&&!isApple(x.b)&&x.n>=5))F.push(['md',`<b>${esc(name(x.b))}</b> ne ${x.n} baar contacts padhe.`]);
+  for(const x of G.filter(x=>x.cat==='location'&&x.night>=5&&!isApple(x.b)))F.push(['md',`<b>${esc(name(x.b))}</b> ne raat me ${x.night} baar location li.`]);
+  for(const [b,n] of Object.entries(d.net)){const c=Object.keys(n.domains).length;if(c>=40&&!isApple(b))F.push(['md',`<b>${esc(name(b))}</b> ne ${c} alag-alag domains se baat ki.`]);}
+  if(!S.length)F.push(['md','Is file me camera/mic/location ka koi record nahi mila. Report ko 1-2 din ON rakh ke dobara save karo.']);
+  if(!F.length)F.push(['ok','Koi khaas shak wali cheez nahi mili. Camera/mic sirf aam calling/social apps ne use kiya. Neeche ki table me khud bhi ek baar dekh lo.']);
+  const rank={hi:0,md:1,ok:2};F.sort((a,b)=>rank[a[0]]-rank[b[0]]);
+  $('#find').innerHTML=F.map(([c,t])=>`<li class="${c}">${t}</li>`).join('');
+
+  // category filter
+  const cats=[...new Set(G.map(x=>x.cat))];
+  $('#cat').innerHTML='<option value="">All sensors</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(catLabel(c))}</option>`).join('');
+  drawApps();
+
+  // timeline
+  const AV=S.filter(s=>s.cat==='camera'||s.cat==='microphone').slice(0,200);
+  $('#tl tbody').innerHTML=AV.length?AV.map(s=>{const odd=!isApple(s.b)&&!EXPECT_AV.has(s.b);
+    const note=(s.night?'<span class="tag t-red">night</span>':'')+(odd?'<span class="tag t-amb">unusual app</span>':'')+(s.dur!=null&&s.dur>=900?'<span class="tag t-amb">long</span>':'');
+    return `<tr><td class="nw">${esc(fmtT(s.start))}</td><td>${esc(name(s.b))}</td><td class="nw"><span class="dot ${dotCls(s.cat)}"></span>${esc(catLabel(s.cat))}</td><td class="n">${fmtD(s.dur)}</td><td>${note}</td></tr>`}).join(''):'<tr><td colspan="5" class="mut">Koi camera/mic record nahi mila.</td></tr>';
+
+  // network
+  const N=Object.entries(d.net).map(([b,n])=>({b,c:Object.keys(n.domains).length,h:n.hits,top:Object.entries(n.domains).sort((x,y)=>y[1]-x[1]).slice(0,6).map(x=>x[0])})).sort((x,y)=>y.c-x.c).slice(0,60);
+  $('#net tbody').innerHTML=N.length?N.map(x=>`<tr><td>${esc(name(x.b))}</td><td class="n">${x.c}</td><td class="n">${x.h}</td><td class="sm">${x.top.map(t=>'<code>'+esc(t)+'</code>').join(', ')}</td></tr>`).join(''):'<tr><td colspan="4" class="mut">Is file me network record nahi hai.</td></tr>';
+
+  $('#res').style.display='block';
+  $('#res').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function drawApps(){
+  if(!DATA)return;const q=$('#q').value.toLowerCase().trim(),c=$('#cat').value;
+  const rows=DATA.G.filter(x=>(!c||x.cat===c)&&(!q||(name(x.b)+' '+x.b).toLowerCase().includes(q)))
+    .sort((a,b)=>{const w=x=>({camera:0,microphone:1}[x.cat]??2);return w(a)-w(b)||b.n-a.n});
+  $('#apps tbody').innerHTML=rows.length?rows.map(x=>{const odd=(x.cat==='camera'||x.cat==='microphone')&&!isApple(x.b)&&!EXPECT_AV.has(x.b);
+    return `<tr><td><b>${esc(name(x.b))}</b>${odd?'<span class="tag t-amb">check</span>':''}<br><a class="sm" href="https://www.google.com/search?q=${encodeURIComponent(x.b+' iOS app')}" target="_blank" rel="noopener"><code>${esc(x.b)}</code></a></td><td class="nw"><span class="dot ${dotCls(x.cat)}"></span>${esc(catLabel(x.cat))}</td><td class="n">${x.n}</td><td class="n">${x.hasDur?fmtD(x.tot):'-'}</td><td class="n">${x.night?'<span class="tag t-red">'+x.night+'</span>':'0'}</td><td class="nw">${esc(fmtT(x.last))}</td></tr>`}).join(''):'<tr><td colspan="6" class="mut">Kuch nahi mila.</td></tr>';
+}
+
+function load(text,label){
+  const recs=parse(text);
+  if(!recs.length){$('#status').textContent='Ye file samajh nahi aayi. App Privacy Report se "Save App Activity" wali .ndjson file hi chuno.';return}
+  const d=analyse(recs);
+  $('#status').textContent=`${recs.length} records padhe.`;
+  render(d,label);
+}
+
+$('#file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;$('#status').textContent='Padh raha hoon…';const r=new FileReader();r.onload=()=>load(String(r.result),'Aapki iPhone report');r.onerror=()=>$('#status').textContent='File nahi khul payi.';r.readAsText(f)});
+const drop=$('#drop');
+['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('on')}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,()=>drop.classList.remove('on')));
+drop.addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f){const r=new FileReader();r.onload=()=>load(String(r.result),'Aapki iPhone report');r.readAsText(f)}});
+$('#q').addEventListener('input',drawApps);$('#cat').addEventListener('change',drawApps);
+
+// sample data (made up, for demo only)
+$('#demo').addEventListener('click',()=>{
+  const L=[];let u=0;const day=['2026-11-23','2026-11-24','2026-11-25'];
+  const add=(b,cat,d,t,sec)=>{const id='s'+(u++);const st=`${d}T${t}:00.000+00:00`;const e=new Date(Date.parse(st)+sec*1000).toISOString().replace('Z','+00:00');L.push({accessor:{identifier:b,identifierType:'bundleID'},category:cat,identifier:id,kind:'intervalBegin',timeStamp:st,type:'access'},{accessor:{identifier:b,identifierType:'bundleID'},category:cat,identifier:id,kind:'intervalEnd',timeStamp:e,type:'access'})};
+  for(const d of day){add('net.whatsapp.WhatsApp','microphone',d,'19:40',420);add('net.whatsapp.WhatsApp','camera',d,'21:05',300);add('com.burbn.instagram','camera',d,'13:12',45);add('com.apple.camera','camera',d,'17:30',60);add('com.google.Maps','location',d,'09:10',900);add('com.burbn.instagram','location',d,'13:12',5);}
+  add('com.quicktorch.flashlight','microphone','2026-11-24','03:12',1320);add('com.quicktorch.flashlight','camera','2026-11-25','02:47',40);add('com.quicktorch.flashlight','contacts','2026-11-25','02:48',2);
+  for(let i=0;i<6;i++)add('com.quicktorch.flashlight','contacts','2026-11-23',`1${i}:00`,1);
+  const nd=(b,dom,h)=>L.push({type:'networkActivity',bundleID:b,domain:dom,hits:h,timeStamp:'2026-11-25T10:00:00.000+00:00'});
+  ['g.whatsapp.net','mmg.whatsapp.net','static.whatsapp.net'].forEach((x,i)=>nd('net.whatsapp.WhatsApp',x,40-i*10));
+  ['i.instagram.com','graph.instagram.com','scontent.cdninstagram.com','graph.facebook.com'].forEach((x,i)=>nd('com.burbn.instagram',x,60-i*10));
+  ['api.quicktorch-ads.io','collect.datahub-mobile.net','upload.free-cdn-store.xyz','sdk.adnet-track.com'].forEach((x,i)=>nd('com.quicktorch.flashlight',x,30-i*5));
+  load(L.map(x=>JSON.stringify(x)).join('\n'),'Sample report (made-up data)');
+});
+
+$('#copy').addEventListener('click',async()=>{
+  if(!DATA)return;const t=['iPhone Privacy Check summary',$('#rsub').textContent,''].concat(DATA.G.filter(x=>x.cat==='camera'||x.cat==='microphone').sort((a,b)=>b.n-a.n).map(x=>`${name(x.b)} - ${catLabel(x.cat)}: ${x.n} times, night ${x.night}, last ${fmtT(x.last)}`)).join('\n');
+  try{await navigator.clipboard.writeText(t);$('#copy').textContent='Copied'}catch(e){$('#copy').textContent='Copy not allowed here'}
+  setTimeout(()=>$('#copy').textContent='Copy summary',2000);
+});
+
+// checklist
+const CK=[
+ ["Anjaan profile / device management","Settings → General → VPN & Device Management","Agar yahan koi profile hai jo aapne ya aapki company ne install nahi kiya, to wo aapka traffic aur settings control kar sakta hai. Use Remove karo. iPhone par spying ka ye sabse aam tareeka hai."],
+ ["Apple ID par anjaan devices","Settings → [aapka naam] → neeche devices ki list","Koi phone/iPad/Mac jo aapka nahi hai, use Remove from Account karo. Phir Apple ID ka password badlo aur Two-Factor ON rakho."],
+ ["Safety Check","Settings → Privacy & Security → Safety Check (iOS 16+)","Manage Sharing & Access me dekho kaun aapki location, photos, notes dekh raha hai aur kin apps ke paas kya access hai. Ek click me sab band ho sakta hai."],
+ ["Location kaun dekh raha hai","Find My app → People","Koi aisa insaan jise aapne location di hi nahi? Stop Sharing karo."],
+ ["Camera aur mic permission","Settings → Privacy & Security → Camera, phir Microphone","Jis app ko camera/mic ki zaroorat nahi (torch, cleaner, game, wallpaper), uska switch OFF karo."],
+ ["Third-party keyboard","Settings → General → Keyboard → Keyboards","Koi doosri company ka keyboard hai aur 'Allow Full Access' ON hai, to wo jo aap type karte ho dekh sakta hai. Zaroorat nahi to hatao."],
+ ["Face ID / passcode","Settings → Face ID & Passcode","'Alternate Appearance' set hai jo aapne nahi kiya? Reset karo aur passcode badlo. Kisi ko passcode pata hai to bhi badlo."],
+ ["iOS update","Settings → General → Software Update","Latest iOS install karo. Updates spyware wale security holes band karte hain."],
+ ["Anjaan apps","Settings → General → iPhone Storage","Poori list dekho. Jo app pehchante nahi ho, delete karo."],
+ ["Tracking","Settings → Privacy & Security → Tracking","'Allow Apps to Request to Track' OFF karo."],
+ ["Lockdown Mode (agar bada shak hai)","Settings → Privacy & Security → Lockdown Mode","Agar lagta hai ki koi aapko khaas taur par target kar raha hai, to ye iPhone ko bahut zyada lock kar deta hai."]
+];
+let saved={};try{saved=JSON.parse(localStorage.getItem('ipc-checks')||'{}')}catch(e){}
+$('#checks').innerHTML=CK.map((c,i)=>`<label class="chk" for="ck${i}"><input type="checkbox" id="ck${i}" ${saved[i]?'checked':''}><div><b>${esc(c[0])}</b><div class="where">${esc(c[1])}</div><div class="sm">${esc(c[2])}</div></div></label>`).join('');
+$('#checks').addEventListener('change',e=>{const i=e.target.id.slice(2);saved[i]=e.target.checked;try{localStorage.setItem('ipc-checks',JSON.stringify(saved))}catch(err){}});
+}
+</script>
+</body>
+</html>
